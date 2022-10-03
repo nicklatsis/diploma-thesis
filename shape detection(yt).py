@@ -120,7 +120,7 @@ while True:
 
     instructions, instructionOrder = getContours(imgDil,imgContour)
 
-    if keyboard.is_pressed('a'):  
+    if keyboard.is_pressed('a'):  #when a is pressed get isntructions
         sortedInstructions = [x for y,x in sorted(zip(instructionOrder,instructions))]
 
 
