@@ -2,68 +2,69 @@ import pygame
 import cv2
 import math 
 import time
-from utils2 import scale_image, blit_rotate_center
+from utils import scale_image, blit_rotate_center, stackimages
 import keyboard
 import numpy as np
+import sys
 pygame.font.init()
 
-WHITE=(255, 255, 255)
-FPS = 60
-GRASS= scale_image(pygame.image.load('grass.jpg'), 2.5)
-TRACK= scale_image(pygame.image.load('track.png'), 0.9)
-TRACK_BORDER= scale_image(pygame.image.load('track-border.png'), 0.9)
-CAR= scale_image(pygame.image.load('red-car.png'),0.5)
-FINISH= pygame.image.load('finish.png')
-FINISH_MASK=pygame.mask.from_surface(FINISH)
+numOfArgs = len(sys.argv)
+map = 0
+if numOfArgs>1:
+    map = int(sys.argv[1])
 
-SELF_VEL=100
-ROTATION_VEL=20
 
-TRACK_BORDER_MASK=pygame.mask.from_surface(TRACK_BORDER)
-WINNER_FONT= pygame.font.SysFont('comicsans',100)
-WIDTH,HEIGHT= TRACK.get_width(),TRACK.get_height()
-WIN = pygame.display.set_mode((WIDTH,HEIGHT))
+if map==0:
+    WHITE=(255, 255, 255)
+    FPS = 60
+    GRASS= scale_image(pygame.image.load('grass.jpg'), 2.6)
+    TRACK= scale_image(pygame.image.load('track2.png'), 1.15)
+    TRACK_BORDER= scale_image(pygame.image.load('track-border2.png'), 1.15)
+    TRACK_BORDER_MASK=pygame.mask.from_surface(TRACK_BORDER)
+    START_POS=(690,580)
+    CAR= scale_image(pygame.image.load('red-car.png'),0.6)
+    FINISH= pygame.image.load('finish.png')
+    FINISH_MASK=pygame.mask.from_surface(FINISH)
+    FINISH_PO=(650,630)
+
+    SELF_VEL=100
+    ROTATION_VEL=15
+
+    WINNER_FONT= pygame.font.SysFont('comicsans',100)
+    WIDTH,HEIGHT= TRACK.get_width(),TRACK.get_height()
+    WIN = pygame.display.set_mode((WIDTH,HEIGHT))
+
+elif map==1:
+    WHITE=(255, 255, 255)
+    FPS = 60
+    GRASS= scale_image(pygame.image.load('grass.jpg'), 2.5)
+    TRACK= scale_image(pygame.image.load('track.png'), 0.9)
+    TRACK_BORDER= scale_image(pygame.image.load('track-border.png'), 0.9)
+    TRACK_BORDER_MASK=pygame.mask.from_surface(TRACK_BORDER)
+    START_POS=(180,200)
+    CAR= scale_image(pygame.image.load('red-car.png'),0.5)
+    FINISH= pygame.image.load('finish.png')
+    FINISH_MASK=pygame.mask.from_surface(FINISH)
+    FINISH_PO=(130,250)
+    
+    SELF_VEL=100
+    ROTATION_VEL=20
+
+    TRACK_BORDER_MASK=pygame.mask.from_surface(TRACK_BORDER)
+    WINNER_FONT= pygame.font.SysFont('comicsans',100)
+    WIDTH,HEIGHT= TRACK.get_width(),TRACK.get_height()
+    WIN = pygame.display.set_mode((WIDTH,HEIGHT))
+else:
+    exit()        
+
 pygame.display.set_caption("Track Race Game")
 
-
-
-frameWidth = 640
-frameHeight= 400
+fWidth=640
+fHeight=480
 cap = cv2.VideoCapture(0)
-cap.set(3,frameWidth)
-cap.set(4,frameHeight)
 
-def stackimages(scale,imgArray):
-    rows=len(imgArray)
-    cols=len(imgArray[0])
-    rowsAvailable= isinstance(imgArray[0],list)
-    width= imgArray[0][0].shape[1]
-    height= imgArray[0][0].shape[0]
-    if rowsAvailable:
-        for x in range(0,rows):
-            for y in range(0,cols):
-                if imgArray[x][y].shape[:2]==imgArray[0][0].shape[:2]:
-                    imgArray[x][y]=cv2.resize(imgArray[x][y],(0,0),None,scale,scale)
-                else:
-                    imgArray[x][y]=cv2.resize(imgArray[x][y],(imgArray[0][0].shape[1],imgArray[0][0].shape[0]),None,scale,scale)
-                if len(imgArray[x][y].shape)==2: imgArray[x][y]=cv2.cvtColor(imgArray[x][y],cv2.COLOR_BAYER_BG2BGR)
-        imageBlanck = np.zeros((height,width,3),np.uint8)
-        hor =[imageBlanck]*rows
-        hor_con =[imageBlanck]*rows
-        for x in range(0,rows):
-            hor[x] = np.hstack(imgArray[x])
-        ver= np.vstack(hor)
-    else:
-        for x in range(0,rows):
-            if imgArray[x].shape[:2] ==imgArray[0].shape[:2]:
-                imgArray[x]=cv2.resize(imgArray[x],(0,0),None,scale,scale)
-            else:
-                imgArray[x]=cv2.resize(imgArray[x],(imgArray[0].shape[1],imgArray[0].shape[0]),None,scale,scale)
-            if len(imgArray[x].shape)==2 : imgArray[x]=cv2.cvtColor(imgArray[x],cv2.COLOR_GRAY2BGR)  
-        hor=np.hstack(imgArray)
-        ver=hor
-    return ver
-
+cap.set(3,fWidth)
+cap.set(4,fHeight)
 
 
 def empty(a):
@@ -113,7 +114,7 @@ def getContours(img,imgContour):
 
             
             cv2.rectangle(imgContour,(x, y),(x+w,y+h),(0,255,0),5)
-            cv2.putText(imgContour,"Points:" + str(len(approx)),(x+w+20,y+20),cv2.FONT_HERSHEY_COMPLEX,0.7,(0,255,0),2)
+            #cv2.putText(imgContour,"Points:" + str(len(approx)),(x+w+20,y+20),cv2.FONT_HERSHEY_COMPLEX,0.7,(0,255,0),2)
             #cv2.putText(imgContour,"Area:" + str(int(area)),(x+w+20,y+45),cv2.FONT_HERSHEY_COMPLEX,0.7,(0,255,0),2)
 
     return shapeList, shapeListPos
@@ -138,7 +139,7 @@ class AbstractCar:      #image rotation
         blit_rotate_center(win, self.img,(self.x,self.y), self.angle)
 
     def move_forward(self):
-        self.vel = min(self.vel+self.acceleration,self.max_vel) #if we reach the higher  acceleration we dont want to pass the max vel
+        self.vel = min(self.vel+self.acceleration,self.max_vel)                         #if we reach the higher  acceleration we dont want to pass the max vel
         self.move()
 
     def move_backward(self):
@@ -146,7 +147,7 @@ class AbstractCar:      #image rotation
         self.move()
     
 
-    def move(self): #basic trigonometry for direction of the movement of the cr
+    def move(self):                                                                   #basic trigonometry for direction of the movement of the cr
         radians = math.radians(self.angle)
         vertical = math.cos(radians) * self.vel 
         horizontal= math.sin(radians) * self.vel
@@ -164,13 +165,22 @@ class AbstractCar:      #image rotation
         poi=mask.overlap(car_mask,offset)  #point of intersection
         #the calling mask (car) is the one to compare ith the other mask 
         return poi
+    
+    def reset(self):
+        self.x,self.y=START_POS
+        self.vel=0
+        self.angle=0
+
 
 
 
 class PlayerCar(AbstractCar):
     
     IMG= CAR
-    START_POS=(180,200)
+    if map==1:
+        START_POS=(180,200)
+    elif map==0:
+        START_POS=(690,580)   
     #VEL=5
     #ANGLE=30
     def bounceback(self):
@@ -182,9 +192,7 @@ class PlayerCar(AbstractCar):
 
 def draw(win,images,car):
     for img,pos in images:
-        win.blit(img,pos)
-    
-       
+        win.blit(img,pos)  
     car.draw(win)
 
     pygame.display.update()
@@ -218,17 +226,27 @@ def draw_winner(text):
 
 run=True
 clock=pygame.time.Clock()
-images=[(GRASS,(0,0)),(TRACK,(0,0)),(FINISH,(130,250)), 
+images=[(GRASS,(0,0)),(TRACK,(0,0)),(FINISH,FINISH_PO), 
         (TRACK_BORDER,(0,0))]
 car=PlayerCar(4,4)
 
+checkIfInstructionsChangedEvery = 5
+prevInstructions = []
+instructionsChangedAt = int( time.time() )
 
+waitForSettings =  int( time.time() )
+
+hasRunned = False
 
 while run:
     success,img= cap.read()
+    
     imgContour=img.copy()
     clock.tick(FPS)
     keys=pygame.key.get_pressed() 
+
+
+    cv2.resizeWindow
     
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
@@ -237,59 +255,75 @@ while run:
 
     imgBlur = cv2.GaussianBlur(img,(7,7),1)
     imgGray = cv2.cvtColor(imgBlur, cv2.COLOR_BGR2GRAY)
-
+    
 
     threshold1 = cv2.getTrackbarPos("Threshold1","Parameters")
     threshold2 = cv2.getTrackbarPos("Threshold2","Parameters")
-
+    
     imgCanny = cv2.Canny(imgGray,threshold1,threshold2)
-
+   
     kernel=np.ones((5,5))
 
     imgDil = cv2.dilate(imgCanny,kernel, iterations=1)
 
     instructions, instructionOrder = getContours(imgDil,imgContour)
 
-    if keys[pygame.K_a]:  #when a is pressed get isntructions
+    tmpInstructions = instructions
+
+
+    if int( time.time() ) - instructionsChangedAt > checkIfInstructionsChangedEvery:
+        print("<<<<<<<<<<<<<<<<<<<<<CHANGED>>>>>>>>>>>>>>>>>>>")
+        prevInstructions = instructions
+        instructionsChangedAt = int( time.time() )
+        hasRunned = False
+
+    
+    if set(tmpInstructions) == set(prevInstructions) and len(instructions) and int( time.time() ) - instructionsChangedAt > 3 and int( time.time() ) - waitForSettings > 20 and not hasRunned:
+        print("running...")
+        hasRunned = True
         sortedInstructions = [x for y,x in sorted(zip(instructionOrder,instructions))]
         for shape in sortedInstructions:
-            if shape=='Circle':
+            if shape=='Arrow':
                 moved=True
                 for i in range(5):
                     if car.collision(TRACK_BORDER_MASK) != None:
                         break
                     else:
                         car.move_forward()
-                #time.sleep()
+                
             if shape=='Rectangle':
                 moved=True
                 if car.collision(TRACK_BORDER_MASK) != None:
                         break
                 else:
                     car.rotate(right=True)
-            if shape=='Triangle':
+                
+            if shape=='Circle':
                 moved=True
                 if car.collision(TRACK_BORDER_MASK) != None:
                     break
                 else:
                     car.rotate(left=True)
-            if shape=='Arrow':
+                
+            if shape=='Triangle':
                 moved=True
                 for i in range(10):
                     if car.collision(TRACK_BORDER_MASK) != None:
                         break
                     else:
                         car.move_backward()
-
+                
             if not moved:
-               car.reduce_speed()     
+               car.reduce_speed()   
+
+            time.sleep(1)
                   
          
 
 
-    imgStack= stackimages(0.8,([img,imgGray,imgCanny],[imgDil,imgContour,imgContour]))
+    imgStack= stackimages(0.7,([imgContour,img,imgCanny]))
  
-
+    
 
     #move_car(car)
     draw(WIN,images,car)
@@ -297,28 +331,24 @@ while run:
     if car.collision(TRACK_BORDER_MASK) != None:
         car.bounceback()
     
-    finish_poi_collide=car.collision(FINISH_MASK,130,250)
+    finish_poi_collide=car.collision(FINISH_MASK,650,630)
     if finish_poi_collide != None: 
         if finish_poi_collide[1]==0:
            car.bounceback() 
         else:
+            car.reset()
             winner_text=""
             winner_text="YOU WIN"
             if winner_text != "" :
                 draw_winner(winner_text)
             break
 
-    
-    
-
-    
-
-    
 
 
-    cv2.imshow("result",imgStack)
+    cv2.imshow("camera feed",imgStack)
     if cv2.waitKey(1) & 0xFF ==ord('q'):
         break
 
 
 pygame.quit()
+
