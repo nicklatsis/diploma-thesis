@@ -6,7 +6,13 @@ from utils import scale_image, blit_rotate_center, stackimages
 import keyboard
 import numpy as np
 import sys
+from tkinter import *
+
 pygame.font.init()
+
+screen= Tk()
+screen_width = screen.winfo_screenwidth()
+screen_height = screen.winfo_screenheight()
 
 numOfArgs = len(sys.argv)
 map = 0
@@ -16,13 +22,13 @@ if numOfArgs>1:
 
 if map==0:
     WHITE=(255, 255, 255)
-    FPS = 60
+    FPS = 15
     GRASS= scale_image(pygame.image.load('grass.jpg'), 2.6)
     TRACK= scale_image(pygame.image.load('track2.png'), 1.15)
     TRACK_BORDER= scale_image(pygame.image.load('track-border2.png'), 1.15)
     TRACK_BORDER_MASK=pygame.mask.from_surface(TRACK_BORDER)
     START_POS=(690,580)
-    CAR= scale_image(pygame.image.load('red-car.png'),0.6)
+    CAR= scale_image(pygame.image.load('red-car.png'),0.6) 
     FINISH= pygame.image.load('finish.png')
     FINISH_MASK=pygame.mask.from_surface(FINISH)
     FINISH_PO=(650,630)
@@ -36,7 +42,7 @@ if map==0:
 
 elif map==1:
     WHITE=(255, 255, 255)
-    FPS = 60
+    FPS = 15
     GRASS= scale_image(pygame.image.load('grass.jpg'), 2.5)
     TRACK= scale_image(pygame.image.load('track.png'), 0.9)
     TRACK_BORDER= scale_image(pygame.image.load('track-border.png'), 0.9)
@@ -54,6 +60,46 @@ elif map==1:
     WINNER_FONT= pygame.font.SysFont('comicsans',100)
     WIDTH,HEIGHT= TRACK.get_width(),TRACK.get_height()
     WIN = pygame.display.set_mode((WIDTH,HEIGHT))
+
+elif map==2:
+    WHITE=(255, 255, 255)
+    FPS = 15
+    GRASS= scale_image(pygame.image.load('grass.jpg'), 2.6)
+    TRACK= scale_image(pygame.image.load('track3.png'), 1.9)
+    TRACK_BORDER= scale_image(pygame.image.load('track-border3.png'), 1.9)
+    TRACK_BORDER_MASK=pygame.mask.from_surface(TRACK_BORDER)
+    START_POS=(720,580)
+    CAR= scale_image(pygame.image.load('red-car.png'),0.6)
+    FINISH= pygame.image.load('finish.png')
+    FINISH_MASK=pygame.mask.from_surface(FINISH)
+    FINISH_PO=(680,630)
+    
+    
+
+    WINNER_FONT= pygame.font.SysFont('comicsans',100)
+    WIDTH,HEIGHT= TRACK.get_width(),TRACK.get_height()
+    WIN = pygame.display.set_mode((WIDTH,HEIGHT))
+    pygame.display.set_caption("Track Race Game")
+
+elif map==3:
+    WHITE=(255, 255, 255)
+    FPS = 15
+    GRASS= scale_image(pygame.image.load('grass.jpg'), 2.6)
+    TRACK= scale_image(pygame.image.load('track4.png'), 1.9)
+    TRACK_BORDER= scale_image(pygame.image.load('track-border4.png'), 1.9)
+    CAR= scale_image(pygame.image.load('red-car.png'),0.6)
+    FINISH= scale_image(pygame.image.load('finish.png'),1.3)
+    FINISH_MASK=pygame.mask.from_surface(FINISH)
+    FINISH_PO=(730,630)
+
+    START_POS=(790,580)
+    TRACK_BORDER_MASK=pygame.mask.from_surface(TRACK_BORDER)
+
+    WINNER_FONT= pygame.font.SysFont('comicsans',100)
+    WIDTH,HEIGHT= TRACK.get_width(),TRACK.get_height()
+    WIN = pygame.display.set_mode((WIDTH,HEIGHT))
+    pygame.display.set_caption("Track Race Game")
+
 else:
     exit()        
 
@@ -72,6 +118,7 @@ def empty(a):
 
 
 cv2.namedWindow("Parameters")
+cv2.moveWindow("Parameters", screen_width-640, screen_height-240)
 cv2.resizeWindow("Parameters",640,240)
 cv2.createTrackbar("Threshold1","Parameters",23,255,empty)
 cv2.createTrackbar("Threshold2","Parameters",20,255,empty)
@@ -180,7 +227,11 @@ class PlayerCar(AbstractCar):
     if map==1:
         START_POS=(180,200)
     elif map==0:
-        START_POS=(690,580)   
+        START_POS=(690,580)  
+    elif map==2:
+        START_POS=(720,580) 
+    elif map==3:
+        START_POS=(790,580)
     #VEL=5
     #ANGLE=30
     def bounceback(self):
@@ -226,8 +277,7 @@ def draw_winner(text):
 
 run=True
 clock=pygame.time.Clock()
-images=[(GRASS,(0,0)),(TRACK,(0,0)),(FINISH,FINISH_PO), 
-        (TRACK_BORDER,(0,0))]
+images=[(GRASS,(0,0)),(TRACK,(0,0)),(FINISH,FINISH_PO), (TRACK_BORDER,(0,0))]
 car=PlayerCar(4,4)
 
 checkIfInstructionsChangedEvery = 5
@@ -237,6 +287,7 @@ instructionsChangedAt = int( time.time() )
 waitForSettings =  int( time.time() )
 
 hasRunned = False
+
 
 while run:
     success,img= cap.read()
@@ -330,8 +381,8 @@ while run:
 
     if car.collision(TRACK_BORDER_MASK) != None:
         car.bounceback()
-    
-    finish_poi_collide=car.collision(FINISH_MASK,650,630)
+    finishX, finishY = FINISH_PO
+    finish_poi_collide=car.collision(FINISH_MASK, finishX, finishY)
     if finish_poi_collide != None: 
         if finish_poi_collide[1]==0:
            car.bounceback() 
@@ -346,6 +397,7 @@ while run:
 
 
     cv2.imshow("camera feed",imgStack)
+    cv2.moveWindow("camera feed", 0,0)
     if cv2.waitKey(1) & 0xFF ==ord('q'):
         break
 
